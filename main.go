@@ -18,9 +18,12 @@ func main() {
 
 	router := chi.NewRouter()
 
-	router.Get("/products", controller.GetProducts())
-	router.Get("/products/{id}", controller.GetProductById())
-	router.Get("/products/search", controller.ProductSearch())
+	router.Route("/products", func(r chi.Router) {
+		r.Get("/", controller.GetProducts())
+		r.Post("/", controller.CreateProduct())
+		r.Get("/{id}", controller.GetProductById())
+		r.Get("/search", controller.SearchProduct())
+	})
 
 	fmt.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", router)
