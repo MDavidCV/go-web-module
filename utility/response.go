@@ -4,12 +4,6 @@ import (
 	"net/http"
 )
 
-type Response struct {
-	Code  int         `json:"code"`
-	Data  interface{} `json:"body"`
-	Error string      `json:"error"`
-}
-
 var errorCodes = map[error]int{
 	ErrNoProducts:           http.StatusInternalServerError,
 	ErrInvalidId:            http.StatusBadRequest,
@@ -19,6 +13,12 @@ var errorCodes = map[error]int{
 	ErrUniqueCodeValue:      http.StatusBadRequest,
 	ErrInvalidValues:        http.StatusBadRequest,
 	ErrProductAlreadyExists: http.StatusInternalServerError,
+}
+
+type Response struct {
+	Code  int         `json:"code"`
+	Data  interface{} `json:"body"`
+	Error string      `json:"error"`
 }
 
 func NewErrorResponse(err error) Response {

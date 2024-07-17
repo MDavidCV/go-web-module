@@ -19,6 +19,9 @@ func main() {
 		r.Post("/", controller.CreateProduct())
 		r.Get("/{id}", controller.GetProductById())
 		r.Get("/search", controller.SearchProduct())
+		r.Put("/{id}", controller.UpdateProduct())
+		r.Delete("/{id}", controller.DeleteProduct())
+		r.Patch("/{id}", controller.UpdatePatchProduct())
 	})
 
 	fmt.Println("Server running on port 8080")

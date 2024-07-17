@@ -9,6 +9,9 @@ type RepositoryProduct interface {
 	GetProducts() ([]domain.Product, error)
 	GetProductById(id int) (domain.Product, error)
 	CreateProduct(product utility.ProductRequest) (domain.Product, error)
+	UpdateProduct(int, utility.ProductRequest) (domain.Product, error)
+	DeleteProduct(int) error
+	UpdatePatchProduct(int, utility.ProductPatchRequest) (domain.Product, error)
 }
 
 type repositoryProduct struct {
@@ -52,6 +55,70 @@ func (rp *repositoryProduct) CreateProduct(reqProduct utility.ProductRequest) (d
 
 	if _, ok := rp.st[id]; ok {
 		return domain.Product{}, utility.ErrProductAlreadyExists
+	}
+
+	rp.st[id] = product
+
+	return product, nil
+}
+
+func (rp *repositoryProduct) UpdateProduct(id int, reqProduct utility.ProductRequest) (domain.Product, error) {
+	product, ok := rp.st[id]
+
+	if !ok {
+		return domain.Product{}, utility.ErrProductNotFound
+	}
+
+	product.Name = reqProduct.Name
+	product.Quantity = reqProduct.Quantity
+	product.CodeValue = reqProduct.CodeValue
+	product.IsPublished = reqProduct.IsPublished
+	product.Expiration = reqProduct.Expiration
+	product.Price = reqProduct.Price
+
+	rp.st[id] = product
+
+	return product, nil
+}
+
+func (rp *repositoryProduct) DeleteProduct(id int) error {
+	if _, ok := rp.st[id]; !ok {
+		return utility.ErrProductNotFound
+	}
+
+	delete(rp.st, id)
+	return nil
+}
+
+func (rp *repositoryProduct) UpdatePatchProduct(id int, reqProduct utility.ProductPatchRequest) (domain.Product, error) {
+	product, ok := rp.st[id]
+
+	if !ok {
+		return domain.Product{}, utility.ErrProductNotFound
+	}
+
+	if reqProduct.Name != nil {
+		product.Name = *reqProduct.Name
+	}
+
+	if reqProduct.Quantity != nil {
+		product.Quantity = *reqProduct.Quantity
+	}
+
+	if reqProduct.CodeValue != nil {
+		product.CodeValue = *reqProduct.CodeValue
+	}
+
+	if reqProduct.IsPublished != nil {
+		product.IsPublished = *reqProduct.IsPublished
+	}
+
+	if reqProduct.Expiration != nil {
+		product.Expiration = *reqProduct.Expiration
+	}
+
+	if reqProduct.Price != nil {
+		product.Price = *reqProduct.Price
 	}
 
 	rp.st[id] = product

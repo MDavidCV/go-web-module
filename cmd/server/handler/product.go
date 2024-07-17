@@ -14,6 +14,8 @@ type ProductController interface {
 	GetProductById() http.HandlerFunc
 	SearchProduct() http.HandlerFunc
 	CreateProduct() http.HandlerFunc
+	UpdateProduct() http.HandlerFunc
+	UpdatePatchProduct() http.HandlerFunc
 }
 
 type productController struct {
@@ -125,6 +127,101 @@ func (pc *productController) CreateProduct() http.HandlerFunc {
 
 		response := utility.NewSuccessResponse(product)
 		response.Code = http.StatusCreated
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(response.Code)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func (pc *productController) UpdateProduct() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var reqBody utility.ProductRequest
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			code := http.StatusBadRequest
+			body := &utility.Response{
+				Code:  code,
+				Data:  nil,
+				Error: "Invalid request body",
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(code)
+			json.NewEncoder(w).Encode(body)
+			return
+		}
+
+		product, err := pc.service.UpdateProduct(chi.URLParam(r, "id"), reqBody)
+
+		if err != nil {
+			response := utility.NewErrorResponse(err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(response.Code)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		response := utility.NewSuccessResponse(product)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(response.Code)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+func (pc *productController) DeleteProduct() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		err := pc.service.DeleteProduct(chi.URLParam(r, "id"))
+
+		if err != nil {
+			response := utility.NewErrorResponse(err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(response.Code)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		response := utility.NewSuccessResponse(nil)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(response.Code)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func (pc *productController) UpdatePatchProduct() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var reqBody utility.ProductPatchRequest
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			code := http.StatusBadRequest
+			body := &utility.Response{
+				Code:  code,
+				Data:  nil,
+				Error: "Invalid request body",
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(code)
+			json.NewEncoder(w).Encode(body)
+			return
+		}
+
+		product, err := pc.service.UpdatePatchProduct(chi.URLParam(r, "id"), reqBody)
+
+		if err != nil {
+			response := utility.NewErrorResponse(err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(response.Code)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		response := utility.NewSuccessResponse(product)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(response.Code)

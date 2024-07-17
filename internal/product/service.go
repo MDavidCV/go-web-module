@@ -12,6 +12,9 @@ type ServiceProduct interface {
 	GetProductById(pathVariable string) (domain.Product, error)
 	SearchProduct(query string) ([]domain.Product, error)
 	CreateProduct(product utility.ProductRequest) (domain.Product, error)
+	UpdateProduct(pathVariable string, product utility.ProductRequest) (domain.Product, error)
+	DeleteProduct(pathVariable string) error
+	UpdatePatchProduct(pathVariable string, product utility.ProductPatchRequest) (domain.Product, error)
 }
 
 type serviceProduct struct {
@@ -69,15 +72,71 @@ func (sp *serviceProduct) CreateProduct(reqProduct utility.ProductRequest) (doma
 	}
 
 	switch {
-	case !utility.VerifyNonZeroValues(reqProduct):
+	case !reqProduct.VerifyNonZeroValues():
 		return domain.Product{}, utility.ErrInvalidValues
-	case !utility.UniqueCodeValue(reqProduct.CodeValue, products):
+	case !reqProduct.VerifyUniqueCodeValue(products):
 		return domain.Product{}, utility.ErrUniqueCodeValue
-	case !utility.VerifyExpirationDate(reqProduct.Expiration):
+	case !reqProduct.VerifyExpirationDate():
 		return domain.Product{}, utility.ErrInvalidDate
 	}
 
 	return sp.repository.CreateProduct(reqProduct)
+}
+
+func (sp *serviceProduct) UpdateProduct(pathVariable string, reqProduct utility.ProductRequest) (domain.Product, error) {
+
+	id, err := strconv.Atoi(pathVariable)
+	if err != nil {
+		return domain.Product{}, utility.ErrInvalidId
+	}
+
+	products, err := sp.repository.GetProducts()
+	if err != nil {
+		return domain.Product{}, err
+	}
+
+	switch {
+	case !reqProduct.VerifyNonZeroValues():
+		return domain.Product{}, utility.ErrInvalidValues
+	case !reqProduct.VerifyUniqueCodeValue(products):
+		return domain.Product{}, utility.ErrUniqueCodeValue
+	case !reqProduct.VerifyExpirationDate():
+		return domain.Product{}, utility.ErrInvalidDate
+	}
+
+	return sp.repository.UpdateProduct(id, reqProduct)
+}
+
+func (sp *serviceProduct) DeleteProduct(pathVariable string) error {
+	id, err := strconv.Atoi(pathVariable)
+	if err != nil {
+		return utility.ErrInvalidId
+	}
+
+	return sp.repository.DeleteProduct(id)
+}
+
+func (sp *serviceProduct) UpdatePatchProduct(pathVariable string, reqProduct utility.ProductPatchRequest) (domain.Product, error) {
+	id, err := strconv.Atoi(pathVariable)
+	if err != nil {
+		return domain.Product{}, utility.ErrInvalidId
+	}
+
+	products, err := sp.repository.GetProducts()
+	if err != nil {
+		return domain.Product{}, err
+	}
+
+	switch {
+	case !reqProduct.VerifyNonZeroValues():
+		return domain.Product{}, utility.ErrInvalidValues
+	case !reqProduct.VerifyUniqueCodeValue(products):
+		return domain.Product{}, utility.ErrUniqueCodeValue
+	case !reqProduct.VerifyExpirationDate():
+		return domain.Product{}, utility.ErrInvalidDate
+	}
+
+	return sp.repository.UpdatePatchProduct(id, reqProduct)
 }
 
 func NewServiceProduct(fileNameData string) *serviceProduct {
