@@ -4,17 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/MDavidCV/go-web-module/controllers"
-	"github.com/MDavidCV/go-web-module/models"
-	"github.com/MDavidCV/go-web-module/utility"
+	"github.com/MDavidCV/go-web-module/cmd/server/handler"
 	"github.com/go-chi/chi/v5"
 )
 
-var products []models.Product
-
 func main() {
-	products = utility.LoadProducts()
-	controller := controllers.NewProductController(products)
+
+	controller := handler.NewProductController("/Users/dcastrillonv/Documents/meli-boootcamp/go/go-web/go-web-module/docs/db/products.json")
 
 	router := chi.NewRouter()
 

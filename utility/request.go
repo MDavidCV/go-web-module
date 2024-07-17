@@ -1,7 +1,6 @@
-package models
+package utility
 
-type Product struct {
-	Id          int     `json:"id"`
+type ProductRequest struct {
 	Name        string  `json:"name"`
 	Quantity    int     `json:"quantity"`
 	CodeValue   string  `json:"code_value"`

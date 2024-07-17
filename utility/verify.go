@@ -3,15 +3,14 @@ package utility
 import (
 	"time"
 
-	"github.com/MDavidCV/go-web-module/dtos"
-	"github.com/MDavidCV/go-web-module/models"
+	"github.com/MDavidCV/go-web-module/internal/domain"
 )
 
-func VerifyNonZeroValues(body dtos.ProductRequest) bool {
+func VerifyNonZeroValues(body ProductRequest) bool {
 	return body.Name != "" && body.Quantity != 0 && body.CodeValue != "" && body.Expiration != "" && body.Price != 0
 }
 
-func UniqueCodeValue(codeValue string, products map[int]models.Product) bool {
+func UniqueCodeValue(codeValue string, products []domain.Product) bool {
 	for _, product := range products {
 		if product.CodeValue == codeValue {
 			return false

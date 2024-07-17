@@ -7,19 +7,20 @@ import (
 	"log"
 	"os"
 
-	"github.com/MDavidCV/go-web-module/models"
+	"github.com/MDavidCV/go-web-module/internal/domain"
 )
 
-func LoadProducts() []models.Product {
-	f, err := os.Open("/Users/dcastrillonv/Documents/meli-boootcamp/go/go-web/go-web-module/products.json")
+func LoadProductsJson(filename string) ([]domain.Product, error) {
+	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
+		return nil, err
 	}
 	defer f.Close()
 
 	decoder := json.NewDecoder(f)
 
-	var products []models.Product
+	var products []domain.Product
 
 	// Read the open bracket
 	if _, err := decoder.Token(); err != nil {
@@ -28,7 +29,7 @@ func LoadProducts() []models.Product {
 
 	// While the array contains values
 	for decoder.More() {
-		var product models.Product
+		var product domain.Product
 		// Decode one object
 		if err := decoder.Decode(&product); err == io.EOF {
 			break
@@ -45,5 +46,5 @@ func LoadProducts() []models.Product {
 		log.Fatal(err)
 	}
 
-	return products
+	return products, nil
 }
