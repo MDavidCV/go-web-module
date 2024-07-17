@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/MDavidCV/go-web-module/internal/product"
 	"github.com/MDavidCV/go-web-module/utility"
@@ -36,19 +37,11 @@ func (pc *productController) GetProducts() http.HandlerFunc {
 		products, err := pc.service.GetProducts()
 
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
-		response := utility.NewSuccessResponse(products)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(products))
 	}
 }
 
@@ -58,19 +51,11 @@ func (pc *productController) GetProductById() http.HandlerFunc {
 		product, err := pc.service.GetProductById(chi.URLParam(r, "id"))
 
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
-		response := utility.NewSuccessResponse(product)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(product))
 	}
 }
 
@@ -80,151 +65,116 @@ func (pc *productController) SearchProduct() http.HandlerFunc {
 		productsFiltered, err := pc.service.SearchProduct(r.URL.Query().Get("priceGt"))
 
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
-		response := utility.NewSuccessResponse(productsFiltered)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(productsFiltered))
 	}
 }
 
 func (pc *productController) CreateProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if !checkAuthorization(r.Header.Get("token")) {
+			handleResponse(w, utility.NewUnauthorizedResponse())
+			return
+		}
+
 		var reqBody utility.ProductRequest
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-			code := http.StatusBadRequest
-			body := &utility.Response{
-				Code:  code,
-				Data:  nil,
-				Error: "Invalid request body",
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(code)
-			json.NewEncoder(w).Encode(body)
+			err = utility.ErrInvalidRequestBody
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
 		product, err := pc.service.CreateProduct(reqBody)
 
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
 		response := utility.NewSuccessResponse(product)
 		response.Code = http.StatusCreated
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, response)
 	}
 }
 
 func (pc *productController) UpdateProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if !checkAuthorization(r.Header.Get("token")) {
+			handleResponse(w, utility.NewUnauthorizedResponse())
+			return
+		}
+
 		var reqBody utility.ProductRequest
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-			code := http.StatusBadRequest
-			body := &utility.Response{
-				Code:  code,
-				Data:  nil,
-				Error: "Invalid request body",
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(code)
-			json.NewEncoder(w).Encode(body)
+			err = utility.ErrInvalidRequestBody
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
 		product, err := pc.service.UpdateProduct(chi.URLParam(r, "id"), reqBody)
-
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
-		response := utility.NewSuccessResponse(product)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(product))
 	}
 }
 func (pc *productController) DeleteProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		err := pc.service.DeleteProduct(chi.URLParam(r, "id"))
-
-		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+		if !checkAuthorization(r.Header.Get("token")) {
+			handleResponse(w, utility.NewUnauthorizedResponse())
 			return
 		}
 
-		response := utility.NewSuccessResponse(nil)
+		err := pc.service.DeleteProduct(chi.URLParam(r, "id"))
+		if err != nil {
+			handleResponse(w, utility.NewErrorResponse(err))
+			return
+		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(nil))
 	}
 }
 
 func (pc *productController) UpdatePatchProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if !checkAuthorization(r.Header.Get("token")) {
+			handleResponse(w, utility.NewUnauthorizedResponse())
+			return
+		}
+
 		var reqBody utility.ProductPatchRequest
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-			code := http.StatusBadRequest
-			body := &utility.Response{
-				Code:  code,
-				Data:  nil,
-				Error: "Invalid request body",
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(code)
-			json.NewEncoder(w).Encode(body)
+			err = utility.ErrInvalidRequestBody
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
 		product, err := pc.service.UpdatePatchProduct(chi.URLParam(r, "id"), reqBody)
-
 		if err != nil {
-			response := utility.NewErrorResponse(err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(response.Code)
-			json.NewEncoder(w).Encode(response)
+			handleResponse(w, utility.NewErrorResponse(err))
 			return
 		}
 
-		response := utility.NewSuccessResponse(product)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(response.Code)
-		json.NewEncoder(w).Encode(response)
+		handleResponse(w, utility.NewSuccessResponse(product))
 	}
+}
+
+func checkAuthorization(token string) bool {
+	api_key := os.Getenv("API_KEY")
+	return api_key == token
+}
+
+func handleResponse(w http.ResponseWriter, response utility.Response) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.Code)
+	json.NewEncoder(w).Encode(response)
 }

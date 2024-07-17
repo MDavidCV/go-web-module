@@ -6,9 +6,15 @@ import (
 
 	"github.com/MDavidCV/go-web-module/cmd/server/handler"
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
 
 	controller := handler.NewProductController("/Users/dcastrillonv/Documents/meli-boootcamp/go/go-web/go-web-module/docs/db/products.json")
 

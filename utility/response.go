@@ -13,6 +13,7 @@ var errorCodes = map[error]int{
 	ErrUniqueCodeValue:      http.StatusBadRequest,
 	ErrInvalidValues:        http.StatusBadRequest,
 	ErrProductAlreadyExists: http.StatusInternalServerError,
+	ErrInvalidRequestBody:   http.StatusBadRequest,
 }
 
 type Response struct {
@@ -34,5 +35,13 @@ func NewSuccessResponse(data interface{}) Response {
 		Code:  http.StatusOK,
 		Data:  data,
 		Error: "",
+	}
+}
+
+func NewUnauthorizedResponse() Response {
+	return Response{
+		Code:  http.StatusUnauthorized,
+		Data:  nil,
+		Error: "Unauthorized - Invalid Token",
 	}
 }

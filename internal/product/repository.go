@@ -15,12 +15,13 @@ type RepositoryProduct interface {
 }
 
 type repositoryProduct struct {
-	st map[int]domain.Product
+	stMap     map[int]domain.Product
+	stHandler StorageProduct
 }
 
 func (rp *repositoryProduct) GetProducts() ([]domain.Product, error) {
-	products := make([]domain.Product, 0, len(rp.st))
-	for _, product := range rp.st {
+	products := make([]domain.Product, 0, len(rp.stMap))
+	for _, product := range rp.stMap {
 		products = append(products, product)
 	}
 
@@ -32,7 +33,7 @@ func (rp *repositoryProduct) GetProducts() ([]domain.Product, error) {
 }
 
 func (rp *repositoryProduct) GetProductById(id int) (domain.Product, error) {
-	product, ok := rp.st[id]
+	product, ok := rp.stMap[id]
 
 	if !ok {
 		return domain.Product{}, utility.ErrProductNotFound
@@ -42,7 +43,7 @@ func (rp *repositoryProduct) GetProductById(id int) (domain.Product, error) {
 }
 
 func (rp *repositoryProduct) CreateProduct(reqProduct utility.ProductRequest) (domain.Product, error) {
-	id := len(rp.st) + 1
+	id := len(rp.stMap) + 1
 	product := domain.Product{
 		Id:          id,
 		Name:        reqProduct.Name,
@@ -53,17 +54,20 @@ func (rp *repositoryProduct) CreateProduct(reqProduct utility.ProductRequest) (d
 		Price:       reqProduct.Price,
 	}
 
-	if _, ok := rp.st[id]; ok {
+	if _, ok := rp.stMap[id]; ok {
 		return domain.Product{}, utility.ErrProductAlreadyExists
 	}
 
-	rp.st[id] = product
+	rp.stMap[id] = product
+	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+		panic(err)
+	}
 
 	return product, nil
 }
 
 func (rp *repositoryProduct) UpdateProduct(id int, reqProduct utility.ProductRequest) (domain.Product, error) {
-	product, ok := rp.st[id]
+	product, ok := rp.stMap[id]
 
 	if !ok {
 		return domain.Product{}, utility.ErrProductNotFound
@@ -76,22 +80,29 @@ func (rp *repositoryProduct) UpdateProduct(id int, reqProduct utility.ProductReq
 	product.Expiration = reqProduct.Expiration
 	product.Price = reqProduct.Price
 
-	rp.st[id] = product
+	rp.stMap[id] = product
+	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+		panic(err)
+	}
 
 	return product, nil
 }
 
 func (rp *repositoryProduct) DeleteProduct(id int) error {
-	if _, ok := rp.st[id]; !ok {
+	if _, ok := rp.stMap[id]; !ok {
 		return utility.ErrProductNotFound
 	}
 
-	delete(rp.st, id)
+	delete(rp.stMap, id)
+	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+		panic(err)
+	}
+
 	return nil
 }
 
 func (rp *repositoryProduct) UpdatePatchProduct(id int, reqProduct utility.ProductPatchRequest) (domain.Product, error) {
-	product, ok := rp.st[id]
+	product, ok := rp.stMap[id]
 
 	if !ok {
 		return domain.Product{}, utility.ErrProductNotFound
@@ -121,14 +132,18 @@ func (rp *repositoryProduct) UpdatePatchProduct(id int, reqProduct utility.Produ
 		product.Price = *reqProduct.Price
 	}
 
-	rp.st[id] = product
+	rp.stMap[id] = product
+	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+		panic(err)
+	}
 
 	return product, nil
 }
 
 func NewRepositoryProduct(dataPath string) *repositoryProduct {
-	st, err := utility.LoadProductsJson(dataPath)
+	stHandler := NewStorageProduct(dataPath)
 
+	st, err := stHandler.GetProducts()
 	if err != nil {
 		panic(err)
 	}
@@ -139,6 +154,7 @@ func NewRepositoryProduct(dataPath string) *repositoryProduct {
 	}
 
 	return &repositoryProduct{
-		st: stMap,
+		stMap:     stMap,
+		stHandler: stHandler,
 	}
 }
