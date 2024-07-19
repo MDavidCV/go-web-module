@@ -1,9 +1,10 @@
-package product
+package service
 
 import (
 	"strconv"
 
 	"github.com/MDavidCV/go-web-module/internal/domain"
+	"github.com/MDavidCV/go-web-module/internal/repository"
 	"github.com/MDavidCV/go-web-module/utility"
 )
 
@@ -18,7 +19,7 @@ type ServiceProduct interface {
 }
 
 type serviceProduct struct {
-	repository RepositoryProduct
+	repository repository.RepositoryProduct
 }
 
 func (sp *serviceProduct) GetProducts() ([]domain.Product, error) {
@@ -139,11 +140,8 @@ func (sp *serviceProduct) UpdatePatchProduct(pathVariable string, reqProduct uti
 	return sp.repository.UpdatePatchProduct(id, reqProduct)
 }
 
-func NewServiceProduct(fileNameData string) *serviceProduct {
-
-	rp := NewRepositoryProduct(fileNameData)
-
+func NewServiceProduct(repository repository.RepositoryProduct) *serviceProduct {
 	return &serviceProduct{
-		repository: rp,
+		repository: repository,
 	}
 }

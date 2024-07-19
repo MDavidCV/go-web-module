@@ -1,4 +1,4 @@
-package product
+package repository
 
 import (
 	"github.com/MDavidCV/go-web-module/internal/domain"
@@ -140,17 +140,22 @@ func (rp *repositoryProduct) UpdatePatchProduct(id int, reqProduct utility.Produ
 	return product, nil
 }
 
-func NewRepositoryProduct(dataPath string) *repositoryProduct {
-	stHandler := NewStorageProduct(dataPath)
+func NewRepositoryProduct(stMap map[int]domain.Product, stHandler StorageProduct) *repositoryProduct {
 
-	st, err := stHandler.GetProducts()
-	if err != nil {
-		panic(err)
+	if stMap == nil && stHandler == nil {
+		panic("stMap and stHandler cannot be nil at the same time")
 	}
 
-	stMap := make(map[int]domain.Product, len(st))
-	for _, product := range st {
-		stMap[product.Id] = product
+	if stMap == nil && stHandler != nil {
+		st, err := stHandler.GetProducts()
+		if err != nil {
+			panic(err)
+		}
+
+		stMap = make(map[int]domain.Product, len(st))
+		for _, product := range st {
+			stMap[product.Id] = product
+		}
 	}
 
 	return &repositoryProduct{

@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"os"
 
-	"github.com/MDavidCV/go-web-module/cmd/server/handler"
-	"github.com/go-chi/chi/v5"
+	"github.com/MDavidCV/go-web-module/cmd/server"
 	"github.com/joho/godotenv"
 )
 
@@ -16,20 +14,18 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	controller := handler.NewProductController("/Users/dcastrillonv/Documents/meli-boootcamp/go/go-web/go-web-module/docs/db/products.json")
+	PORT := os.Getenv("PORT")
+	API_KEY := os.Getenv("API_KEY")
 
-	router := chi.NewRouter()
+	cfg := &server.ConfigSeverChi{
+		ServerAddress:  ":" + PORT,
+		LoaderFielPath: "/Users/dcastrillonv/Documents/meli-boootcamp/go/go-web/go-web-module/docs/db/products.json",
+		Token:          API_KEY,
+	}
 
-	router.Route("/products", func(r chi.Router) {
-		r.Get("/", controller.GetProducts())
-		r.Post("/", controller.CreateProduct())
-		r.Get("/{id}", controller.GetProductById())
-		r.Get("/search", controller.SearchProduct())
-		r.Put("/{id}", controller.UpdateProduct())
-		r.Delete("/{id}", controller.DeleteProduct())
-		r.Patch("/{id}", controller.UpdatePatchProduct())
-	})
+	app := server.NewServerChi(cfg)
 
-	fmt.Println("Server running on port 8080")
-	http.ListenAndServe(":8080", router)
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
 }
