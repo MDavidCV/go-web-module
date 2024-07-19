@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/MDavidCV/go-web-module/internal/domain"
 	"github.com/MDavidCV/go-web-module/internal/service"
 	"github.com/MDavidCV/go-web-module/utility"
 	"github.com/go-chi/chi/v5"
@@ -136,6 +137,23 @@ func (pc *productController) UpdatePatchProduct() http.HandlerFunc {
 		}
 
 		HandleResponse(w, utility.NewSuccessResponse(product))
+	}
+}
+func (pc *productController) GetConsumerPrice() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query().Get("list")
+		products, totalPrice, err := pc.service.GetConsumerPrice(query)
+
+		if err != nil {
+			HandleResponse(w, utility.NewErrorResponse(err))
+			return
+		}
+
+		data := struct {
+			Products   []domain.Product
+			TotalPrice float64
+		}{Products: products, TotalPrice: totalPrice}
+		HandleResponse(w, utility.NewSuccessResponse(data))
 	}
 }
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/MDavidCV/go-web-module/internal/domain"
 	"github.com/MDavidCV/go-web-module/internal/repository"
@@ -16,6 +17,7 @@ type ServiceProduct interface {
 	UpdateProduct(pathVariable string, product utility.ProductRequest) (domain.Product, error)
 	DeleteProduct(pathVariable string) error
 	UpdatePatchProduct(pathVariable string, product utility.ProductPatchRequest) (domain.Product, error)
+	GetConsumerPrice(query string) ([]domain.Product, float64, error)
 }
 
 type serviceProduct struct {
@@ -138,6 +140,67 @@ func (sp *serviceProduct) UpdatePatchProduct(pathVariable string, reqProduct uti
 	}
 
 	return sp.repository.UpdatePatchProduct(id, reqProduct)
+}
+
+func (sp *serviceProduct) GetConsumerPrice(query string) ([]domain.Product, float64, error) {
+
+	var products []domain.Product
+	var totalPrice float64
+	var totalProducts int
+
+	if query == "" {
+		var err error
+		products, err = sp.repository.GetProducts()
+
+		if err != nil {
+			return nil, 0, err
+		}
+
+		for _, product := range products {
+			totalPrice += product.Price
+			totalProducts++
+		}
+
+	} else {
+		rawValues := strings.Trim(query, "[]")
+		values := strings.Split(rawValues, ",")
+		uniqueProductsIds := utility.CountValues(values)
+
+		products = []domain.Product{}
+		for key, value := range uniqueProductsIds {
+			id, err := strconv.Atoi(key)
+			if err != nil {
+				return nil, 0, utility.ErrInvalidQuery
+			}
+
+			product, err := sp.repository.GetProductById(id)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			if value > product.Quantity {
+				return nil, 0, utility.ErrInvalidQuery
+			}
+			if !product.IsPublished {
+				return nil, 0, utility.ErrInvalidQuery
+			}
+
+			products = append(products, product)
+			totalPrice += product.Price * float64(value)
+			totalProducts += value
+		}
+	}
+
+	switch {
+	case totalProducts <= 10:
+		totalPrice = totalPrice * 1.21
+	case totalProducts > 10 && totalProducts <= 20:
+		totalPrice = totalPrice * 1.17
+	case totalProducts > 20:
+		totalPrice = totalPrice * 1.15
+	}
+
+	return products, totalPrice, nil
 }
 
 func NewServiceProduct(repository repository.RepositoryProduct) *serviceProduct {

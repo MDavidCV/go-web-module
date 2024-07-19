@@ -70,6 +70,7 @@ func (s *ServerChi) Run() error {
 			r.Get("/", controller.GetProducts())
 			r.Get("/{id}", controller.GetProductById())
 			r.Get("/search", controller.SearchProduct())
+			r.Get("/consumer_price", controller.GetConsumerPrice())
 		})
 
 		// Protected routes
