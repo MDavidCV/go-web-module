@@ -5,7 +5,6 @@ import (
 )
 
 var errorCodes = map[error]int{
-	ErrNoProducts:           http.StatusInternalServerError,
 	ErrInvalidId:            http.StatusBadRequest,
 	ErrProductNotFound:      http.StatusNotFound,
 	ErrInvalidQuery:         http.StatusBadRequest,

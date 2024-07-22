@@ -116,7 +116,9 @@ func (pc *productController) DeleteProduct() http.HandlerFunc {
 			return
 		}
 
-		HandleResponse(w, utility.NewSuccessResponse(nil))
+		response := utility.NewSuccessResponse(nil)
+		response.Code = http.StatusNoContent
+		HandleResponse(w, response)
 	}
 }
 

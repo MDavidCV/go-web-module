@@ -25,10 +25,6 @@ func (rp *repositoryProduct) GetProducts() ([]domain.Product, error) {
 		products = append(products, product)
 	}
 
-	if len(products) == 0 {
-		return nil, utility.ErrNoProducts
-	}
-
 	return products, nil
 }
 
@@ -59,8 +55,10 @@ func (rp *repositoryProduct) CreateProduct(reqProduct utility.ProductRequest) (d
 	}
 
 	rp.stMap[id] = product
-	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
-		panic(err)
+	if rp.stHandler != nil {
+		if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+			panic(err)
+		}
 	}
 
 	return product, nil
@@ -94,8 +92,10 @@ func (rp *repositoryProduct) DeleteProduct(id int) error {
 	}
 
 	delete(rp.stMap, id)
-	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
-		panic(err)
+	if rp.stHandler != nil {
+		if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+			panic(err)
+		}
 	}
 
 	return nil
@@ -133,8 +133,10 @@ func (rp *repositoryProduct) UpdatePatchProduct(id int, reqProduct utility.Produ
 	}
 
 	rp.stMap[id] = product
-	if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
-		panic(err)
+	if rp.stHandler != nil {
+		if err := rp.stHandler.WriteProducts(rp.stMap); err != nil {
+			panic(err)
+		}
 	}
 
 	return product, nil
